@@ -1,0 +1,3 @@
+chmod +x github-automation.sh
+chmod +x config.sh
+./github-automation.sh

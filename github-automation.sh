@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# run commands to execute the script
+# chmod +x github-automation.sh
+# chmod +x config.sh
+# ./github-automation.sh
+
 # Global options
 set -e  # Exit script immediately on any command that exits with a non-zero status
 [[ "$DEBUG" == "true" ]] && set -x  # Enable debug mode when DEBUG=true
@@ -16,6 +21,10 @@ log() {
   shift  # Shift the argument so that $* refers to the rest of the arguments (the log message)
   echo "[$(date +'%Y-%m-%d %H:%M:%S')] [$level] $*"  # Print log with timestamp and level
 }
+# output
+# with shift [2023-10-05 12:34:56] [INFO] This is a log message
+# without shift [2023-10-05 12:34:56] [INFO] INFO This is a log message
+
 
 # Function to handle errors and exit the script
 # Arguments:
@@ -29,23 +38,30 @@ error_exit() {
 # Arguments:
 #   $1 - Error message to display if the last command failed
 check_status() {
+  # $? is a special variable in shell scripting that holds the exit status of the last executed command.
+  # An exit status of 0 typically means that the command was successful, while a non-zero exit status indicates an error.
   if [[ $? -ne 0 ]]; then  # Check if the exit status of the last command is non-zero (i.e., an error)
-    error_exit "$1"  # Call the error_exit function with the provided error message
+    # $1 refers to the first argument passed to the check_status function.
+    # The error_exit function is called with the provided error message.
+    # Without quotes around $1, if the error message contains spaces, it will be split into multiple arguments.
+    error_exit "$1"  # Call the error_exit function with the provided error message, preserving spaces and special characters
   fi
+  # The 'fi' keyword marks the end of the 'if' statement.
 }
 
 # Function to create a team in a GitHub organization
 # Uses GitHub CLI (gh) to interact with the GitHub API
 create_team() {
-  log "INFO" "Creating team $TEAM_NAME in the $ORG organization..."  # Log the action
+  log "INFO" "Creating team $TEAM_NAME in the $ORG organization..."
   
-  # Send a POST request to create the team in the GitHub organization
   gh api -X POST "orgs/$ORG/teams" \
     -H "Accept: application/vnd.github+json" \
-    -F name="$TEAM_NAME" \  # Name of the team
-    -F description="Team responsible for managing the website repository." \  # Team description
-    -F privacy="closed" || check_status "Failed to create team $TEAM_NAME."  # Check for failure and log error if needed
+    --field name="$TEAM_NAME" \
+    --field description="Team responsible for managing the website repository." \
+    --field privacy="closed" || check_status "Failed to create team $TEAM_NAME."
 }
+
+
 
 # Function to add a user to the created team
 # Arguments:
@@ -130,13 +146,24 @@ set_default_branch() {
   gh api -X PATCH "repos/$REPO" -F "default_branch=$BRANCH" || check_status "Failed to set default branch to $BRANCH for $REPO."
 }
 
+
+print_final_message() {
+  log "INFO" "Automation complete!"
+  
+  # Print script location and execution directory
+  echo "The script is located in: $(realpath "$0")"  # realpath "$0" to get the full path of the script (where the script is located).
+  echo "The script is executed from: $(pwd)" # pwd to get the current working directory (where the script is being executed from).
+}
+
 # Main function to coordinate the script's operations
 main() {
   team_setup  # Call the function to set up the team
   set_branch_protection  # Call the function to set branch protection rules
   set_default_branch  # Call the function to set the default branch for the repository
-  log "INFO" "Automation complete!"  # Log that the entire automation process is complete
+  print_final_message  # Call the function to print the final message
 }
+
+
 
 # Run the main function
 main

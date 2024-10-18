@@ -79,12 +79,12 @@ add_user_to_team() {
 #   $REPO - The name of the repository
 #   $TEAM_NAME - The team whose permissions are being set
 set_team_repo_permissions() {
-  log "INFO" "Setting $TEAM_NAME team permissions to maintain for the $REPO repository..."  # Log the action
+  log "INFO" "Setting $TEAM_NAME team permissions to $PERMISSION for the $REPO repository..."  # Log the action
   
   # Send a PUT request to set the team's repository permissions
   gh api -X PUT "orgs/$ORG/teams/$TEAM_NAME/repos/$REPO" \
     -H "Accept: application/vnd.github+json" \
-    -F permission="maintain" || check_status "Failed to set permissions for $TEAM_NAME on $REPO."
+    -F permission="$PERMISSION" || check_status "Failed to set permissions for $TEAM_NAME on $REPO."
 }
 
 # Function to orchestrate team setup
